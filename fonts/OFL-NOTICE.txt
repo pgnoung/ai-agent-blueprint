@@ -1,0 +1,2 @@
+Mitr (Cadson Demak) and Noto Sans Thai Looped (Google) are licensed under the SIL Open Font License 1.1
+(https://openfontlicense.org). Files here are unmodified woff2 subsets (Thai + Latin, one weight each).
