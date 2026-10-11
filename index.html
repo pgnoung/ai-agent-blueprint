@@ -50,25 +50,25 @@
       <form id="blueprint-form" novalidate>
         <div class="field" data-field="business">
           <label class="field__label" for="business"><span class="field__num" aria-hidden="true">1</span>ธุรกิจของคุณ</label>
-          <textarea class="field__input field__input--area field__input--short" id="business" name="business" lang="th" rows="2" maxlength="160"
+          <textarea class="field__input field__input--area field__input--short" id="business" name="business" lang="th" rows="2" maxlength="50"
             autocomplete="off" spellcheck="false" enterkeyhint="next"
             placeholder="ตัวอย่าง: ร้านวัสดุก่อสร้าง&#10;ขายส่งให้ผู้รับเหมา"
             aria-describedby="business-error business-count" required></textarea>
           <div class="field__meta">
             <p class="field__error" id="business-error" hidden></p>
-            <span class="field__count" id="business-count">0/160</span>
+            <span class="field__count" id="business-count">0/50</span>
           </div>
         </div>
 
         <div class="field" data-field="answer">
           <label class="field__label" for="answer"><span class="field__num" aria-hidden="true">2</span><span><span class="ph">ถ้ามีผู้ช่วยเพิ่มหนึ่งคน</span> <span class="ph">ฉันอยากมอบหมายให้เขา…</span></span></label>
-          <textarea class="field__input field__input--area" id="answer" name="answer" lang="th" rows="3" maxlength="300"
+          <textarea class="field__input field__input--area" id="answer" name="answer" lang="th" rows="3" maxlength="100"
             autocomplete="off" spellcheck="false"
             placeholder="ตัวอย่าง: ตามใบเสนอราคา&#10;ที่ลูกค้ายังไม่ตอบ"
             aria-describedby="answer-error answer-count budget" required></textarea>
           <div class="field__meta">
             <p class="field__error" id="answer-error" hidden></p>
-            <span class="field__count" id="answer-count">0/300</span>
+            <span class="field__count" id="answer-count">0/100</span>
           </div>
         </div>
 
@@ -92,21 +92,21 @@
         <svg viewBox="0 0 48 48" focusable="false"><path d="m14 24.5 7 7 13-14" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <h2 class="done__title" id="done-title" tabindex="-1"><span class="ph">เปิด LINE แล้ว</span> <span class="ph">กด <span class="done__send">ส่ง</span> ได้เลย</span></h2>
-      <p class="done__sub"><span class="ph">ข้อความนี้รออยู่ในช่องพิมพ์</span> <span class="ph">ของแชท <span class="oa" data-bind="oa">@pngoung</span></span></p>
+      <p class="done__sub"><span class="ph">ข้อความนี้รออยู่ในช่องพิมพ์</span><wbr><span class="ph">ของแชท <span class="oa" data-bind="oa">@pngoung</span></span></p>
       <figure class="bubble">
         <figcaption class="sr-only">ข้อความที่จะส่ง</figcaption>
         <p class="bubble__text" id="preview"></p>
       </figure>
 
       <a class="friend" id="friend-link" href="https://line.me/R/ti/p/%40pngoung">
-        <span class="friend__q"><span class="ph">ยังไม่ได้เป็นเพื่อน</span> <span class="ph oa"><span data-bind="oa">@pngoung</span>?</span></span>
-        <span class="friend__cta">เพิ่มเพื่อนก่อน
+        <span class="friend__q">ยังไม่ได้เป็นเพื่อนกันใน LINE?</span>
+        <span class="friend__cta">เพิ่มเพื่อน <span data-bind="oa">@pngoung</span>
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13m-5-5.5L18.5 12 13 17.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         <span class="friend__why"><span class="ph">เพื่อให้ไอเดีย</span><span class="ph">ส่งถึงคุณได้</span></span>
       </a>
 
-      <a class="btn btn--secondary" id="resend-link" href="#">ส่งอีกครั้ง</a>
+      <a class="btn btn--secondary" id="resend-link" href="#">เปิด LINE อีกครั้ง</a>
       <button class="btn-link" id="edit-button" type="button">แก้ไขคำตอบ</button>
     </section>
 

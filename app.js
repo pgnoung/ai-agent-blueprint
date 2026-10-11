@@ -7,7 +7,7 @@
   const NEAR_LIMIT = 0.85;              // show the remaining-room hint from 85% of the limit
   const COUNT_NEAR = 0.9;               // per-field counter turns gold from 90% of maxlength
   const MIN_CHARS = 2;
-  const THAI_URL_COST = 9;              // one Thai character = 3 UTF-8 bytes = 9 URL characters
+  const THAI_URL_COST = 9;              // one Thai character = 3 UTF-8 bytes = 9 URL characters (the most any UTF-16 unit costs)
   const MESSAGE_BASE = 'https://line.me/R/oaMessage/';
   const FRIEND_BASE = 'https://line.me/R/ti/p/';
   const DRAFT_KEY = 'ai-agent-blueprint.draft';
@@ -45,6 +45,13 @@
       .replace(/[\r\n\t\v\f\u2028\u2029]+/g, ' ')
       .replace(/\s{2,}/g, ' ')
       .trim();
+  }
+
+  // Cut to max UTF-16 units without keeping half an emoji.
+  function clampUnits(text, max) {
+    if (text.length <= max) return text;
+    const last = text.charCodeAt(max - 1);
+    return text.slice(0, last >= 0xD800 && last <= 0xDBFF ? max - 1 : max);
   }
 
   function buildText(campaign, business, answer) {
@@ -165,9 +172,17 @@
     if (draft) {
       for (const name of ['business', 'answer']) {
         const field = els.fields[name];
-        if (!field.value && typeof draft[name] === 'string') field.value = draft[name].slice(0, field.maxLength);
+        if (!field.value && typeof draft[name] === 'string') field.value = clampUnits(draft[name], field.maxLength);
       }
     }
+
+    // Field limits in UTF-16 units, read once from the maxlength attributes.
+    const limits = { business: els.fields.business.maxLength, answer: els.fields.answer.maxLength };
+    // When every allowed character can be Thai and the link still fits, the counters are the whole truth
+    // and the remaining-room hint stays quiet. The over-limit block below stays as the safety net for a
+    // campaign whose fixed lines are longer.
+    const emptyLength = buildMessageUrl(campaign.oa, buildText(campaign, '', '')).length;
+    const countersFit = emptyLength + (limits.business + limits.answer) * THAI_URL_COST <= URL_LIMIT;
 
     const values = () => ({
       business: normalize(els.fields.business.value),
@@ -181,12 +196,22 @@
       area.style.height = `${area.scrollHeight + 3}px`;
     }
 
+    // WebKit (Safari, LINE on iPhone) counts maxlength in grapheme clusters, so Thai vowel and tone marks
+    // can slip past it. Enforce the limit in UTF-16 units so the counter and the link budget hold everywhere.
+    function enforceLimit(name, event) {
+      const field = els.fields[name];
+      if (event.isComposing || field.value.length <= limits[name]) return;
+      const caret = Math.min(field.selectionEnd, limits[name]);
+      field.value = clampUnits(field.value, limits[name]);
+      try { field.setSelectionRange(caret, caret); } catch { /* not focused: nothing to restore */ }
+    }
+
     function updateCount(name) {
       const field = els.fields[name];
       const counter = document.getElementById(`${name}-count`);
       const length = field.value.length;
-      counter.textContent = `${length}/${field.maxLength}`;
-      counter.classList.toggle('is-near', length >= field.maxLength * COUNT_NEAR);
+      counter.textContent = `${length}/${limits[name]}`;
+      counter.classList.toggle('is-near', length >= limits[name] * COUNT_NEAR);
     }
 
     function setError(name, message) {
@@ -206,7 +231,7 @@
         els.budget.textContent = MSG.over(cut);
         els.budget.classList.add('is-over');
         els.budget.hidden = false;
-      } else if (length >= URL_LIMIT * NEAR_LIMIT) {
+      } else if (!countersFit && length >= URL_LIMIT * NEAR_LIMIT) {
         const room = Math.max(0, Math.floor((URL_LIMIT - length) / THAI_URL_COST));
         els.budget.textContent = MSG.near(room);
         els.budget.classList.remove('is-over');
@@ -253,13 +278,16 @@
 
     for (const name of ['business', 'answer']) {
       const field = els.fields[name];
-      field.addEventListener('input', () => {
+      const onEdit = (event) => {
+        enforceLimit(name, event);
         updateCount(name);
         if (field.getAttribute('aria-invalid') === 'true' && normalize(field.value).length >= MIN_CHARS) setError(name, '');
         updateBudget();
         fitTextarea(field);
         saveDraft({ business: els.fields.business.value, answer: els.fields.answer.value });
-      });
+      };
+      field.addEventListener('input', onEdit);
+      field.addEventListener('compositionend', onEdit);   // the limit waits for IME composition to finish
       updateCount(name);
     }
 

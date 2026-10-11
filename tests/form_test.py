@@ -25,6 +25,9 @@ from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 URL_LIMIT = 1999
+BUSINESS_MAX = 50
+ANSWER_MAX = 100
+REQUEST_LINE = "(ขอรับไอเดียการวางระบบ AI Agent ภายใน 24 ชม.)"
 LINE_BASE = "https://line.me/R/oaMessage/%40pngoung/?"
 FRIEND_URL = "https://line.me/R/ti/p/%40pngoung"
 PHONE = {"viewport": {"width": 390, "height": 844}, "device_scale_factor": 3, "is_mobile": True,
@@ -35,9 +38,22 @@ ANSWER_TYPED = "ตามใบเสนอราคาที่ลูกค้�
 ANSWER_NORMALIZED = "ตามใบเสนอราคาที่ลูกค้ายังไม่ตอบ แล้วสรุปให้ฉันทุกเช้า ว่าควรโทรหาใครก่อน"
 
 
-def expected_text(business: str, answer: str, campaign: str = "IESA6") -> str:
-    return (f"#AIAGENT {campaign}\nธุรกิจ: {business}\nอยากให้ผู้ช่วย AI ทำก่อน: {answer}\n"
-            "(ขอรับไอเดียการวางระบบ AI Agent ภายใน 24 ชม.)")
+def expected_text(business: str, answer: str, campaign: str = "IESA6", request_line: str = REQUEST_LINE) -> str:
+    return f"#AIAGENT {campaign}\nธุรกิจ: {business}\nอยากให้ผู้ช่วย AI ทำก่อน: {answer}\n{request_line}"
+
+
+# A test-only campaign whose fixed lines are long enough that full fields overflow the link: it exercises the
+# remaining-room hint and the over-limit block, which the real IESA6 lines can never reach.
+LONG_REQUEST = REQUEST_LINE + " " + "ก" * 60
+LONG_CAMPAIGN = ('"LONGTEST": {"campaignId": "LONGTEST", "keyword": "#AIAGENT", "oa": "@pngoung", '
+                 '"kicker": "IESA S-Curve MBA รุ่น 6 · โค้ชง้วง", "requestLine": "' + LONG_REQUEST + '"},')
+
+
+def html_with_long_campaign() -> str:
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    marker = '"campaigns": {'
+    assert html.count(marker) == 1, "campaign block marker not found"
+    return html.replace(marker, marker + "\n      " + LONG_CAMPAIGN)
 
 
 def encode_component(text: str) -> str:
@@ -74,9 +90,14 @@ class Results:
         print(("  PASS " if ok else "  FAIL ") + name + ("" if ok else f" :: {detail}"), flush=True)
 
 
-async def open_page(browser, base: str, query: str, log: dict, size: dict | None = None):
+async def open_page(browser, base: str, query: str, log: dict, size: dict | None = None,
+                    html: str | None = None):
     ctx = await browser.new_context(**{**PHONE, **({"viewport": size} if size else {})})
     page = await ctx.new_page()
+    if html is not None:  # serve a modified index.html for this page only
+        async def on_index(route):
+            await route.fulfill(status=200, content_type="text/html; charset=utf-8", body=html)
+        await page.route(lambda url: url.split("?", 1)[0].rstrip("/") == base, on_index)
     log.setdefault("line", [])
     log.setdefault("foreign", [])
     log.setdefault("errors", [])
@@ -118,9 +139,9 @@ async def run(shots: Path | None) -> Results:
             log: dict = {}
             ctx, page = await open_page(browser, base, "?c=IESA6", log)
             res.check("kicker from config", await page.locator(".kicker").inner_text() == "IESA S-Curve MBA รุ่น 6 · โค้ชง้วง")
-            res.check("counters start at 0/160 and 0/300",
-                      await page.locator("#business-count").inner_text() == "0/160"
-                      and await page.locator("#answer-count").inner_text() == "0/300")
+            res.check(f"counters start at 0/{BUSINESS_MAX} and 0/{ANSWER_MAX}",
+                      await page.locator("#business-count").inner_text() == f"0/{BUSINESS_MAX}"
+                      and await page.locator("#answer-count").inner_text() == f"0/{ANSWER_MAX}")
             res.check("add-friend link", await page.locator("#friend-link").get_attribute("href") == FRIEND_URL)
             res.check("labels bound to fields",
                       await page.get_by_label("ธุรกิจของคุณ").count() == 1
@@ -150,8 +171,11 @@ async def run(shots: Path | None) -> Results:
             res.check("Enter in business does not submit", not log["line"])
             res.check("business error clears while typing", await page.locator("#business-error").is_hidden())
             await page.locator("#answer").fill(ANSWER_TYPED)
-            res.check("business counter counts", await page.locator("#business-count").inner_text() == f"{len(BUSINESS_TYPED)}/160")
-            res.check("answer counter counts", await page.locator("#answer-count").inner_text() == f"{len(ANSWER_TYPED)}/300")
+            res.check("business counter counts",
+                      await page.locator("#business-count").inner_text() == f"{len(BUSINESS_TYPED)}/{BUSINESS_MAX}")
+            res.check("answer counter counts",
+                      await page.locator("#answer-count").inner_text() == f"{len(ANSWER_TYPED)}/{ANSWER_MAX}")
+            res.check("no length hint for a normal answer", await page.locator("#budget").is_hidden())
             await shot(page, shots, "03-filled-390")
             await page.locator("button[type=submit]").click()
             await wait_for_line(log, 1)
@@ -165,11 +189,17 @@ async def run(shots: Path | None) -> Results:
             res.check("sent state visible", await page.locator("#done-view").is_visible())
             res.check("sent state copy", "เปิด LINE แล้ว กด ส่ง ได้เลย" in await page.locator("#done-title").inner_text())
             res.check("preview shows the message", await page.locator("#preview").inner_text() == text)
-            res.check("ส่งอีกครั้ง re-opens the same URL", await page.locator("#resend-link").get_attribute("href") == want)
+            sub = await page.locator(".done__sub").inner_text()
+            res.check("sent sub-line has no stray space", sub == "ข้อความนี้รออยู่ในช่องพิมพ์ของแชท @pngoung", repr(sub))
+            resend_label = (await page.locator("#resend-link").inner_text()).strip()
+            res.check("resend button says เปิด LINE อีกครั้ง", resend_label == "เปิด LINE อีกครั้ง", repr(resend_label))
+            cta = " ".join((await page.locator(".friend__cta").inner_text()).split())
+            res.check("friend button says เพิ่มเพื่อน @pngoung", cta == "เพิ่มเพื่อน @pngoung", repr(cta))
+            res.check("เปิด LINE อีกครั้ง re-opens the same URL", await page.locator("#resend-link").get_attribute("href") == want)
             await shot(page, shots, "04-sent-390", full=True)
             await page.locator("#resend-link").click()
             await wait_for_line(log, 2)
-            res.check("ส่งอีกครั้ง navigates to the same URL", len(log["line"]) >= 2 and log["line"][1] == want)
+            res.check("เปิด LINE อีกครั้ง navigates to the same URL", len(log["line"]) >= 2 and log["line"][1] == want)
             await page.locator("#edit-button").click()
             res.check("แก้ไขคำตอบ returns to the form with values kept",
                       await page.locator("#form-view").is_visible()
@@ -178,31 +208,73 @@ async def run(shots: Path | None) -> Results:
             res.check("no console errors", not log["errors"], str(log["errors"]))
             await ctx.close()
 
-            # 4. maxlength + URL budget guard (300 Thai chars cannot fit a 2,000-char link)
+            # 4a. full fields with the real IESA6 lines: counters are exact, no hint, the link always fits
             log = {}
             ctx, page = await open_page(browser, base, "?c=IESA6", log)
             await page.locator("#business").focus()
             await page.keyboard.insert_text("ก" * 200)
-            res.check("business maxlength 160 enforced", len(await page.locator("#business").input_value()) == 160)
-            await page.locator("#business").fill("โรงงานผลิตชิ้นส่วนรถยนต์")
+            res.check(f"business maxlength {BUSINESS_MAX} enforced",
+                      len(await page.locator("#business").input_value()) == BUSINESS_MAX)
             await page.locator("#answer").focus()
-            await page.keyboard.insert_text("ข" * 400)
+            await page.keyboard.insert_text("ที่" * 200)  # Thai with vowel and tone marks: 3 units per syllable
             answer_value = await page.locator("#answer").input_value()
-            res.check("answer maxlength 300 enforced", len(answer_value) == 300, str(len(answer_value)))
+            res.check(f"answer maxlength {ANSWER_MAX} enforced", len(answer_value) == ANSWER_MAX, str(len(answer_value)))
+            res.check("full counters read 50/50 and 100/100",
+                      await page.locator("#business-count").inner_text() == f"{BUSINESS_MAX}/{BUSINESS_MAX}"
+                      and await page.locator("#answer-count").inner_text() == f"{ANSWER_MAX}/{ANSWER_MAX}")
+            res.check("full fields show no length hint", await page.locator("#budget").is_hidden())
+            await shot(page, shots, "05-full-390")
+            await page.locator("button[type=submit]").click()
+            await wait_for_line(log, 1)
+            want = LINE_BASE + encode_component(expected_text("ก" * BUSINESS_MAX, answer_value))
+            got = log["line"][0] if log["line"] else ""
+            res.check("full fields open the exact URL", got == want, f"\n got={got[:120]}\nwant={want[:120]}")
+            res.check("full fields stay under 2,000 chars", 0 < len(got) <= URL_LIMIT, str(len(got)))
+            await ctx.close()
+
+            # 4b. an engine that lets more UTF-16 units past maxlength (Safari counts grapheme clusters)
+            log = {}
+            ctx, page = await open_page(browser, base, "?c=IESA6", log)
+            await page.evaluate("() => document.querySelectorAll('textarea').forEach((t) => t.removeAttribute('maxlength'))")
+            await page.locator("#answer").focus()
+            await page.keyboard.insert_text("ข" * 150)
+            res.check("page clamps the answer to 100 units without maxlength",
+                      len(await page.locator("#answer").input_value()) == ANSWER_MAX
+                      and await page.locator("#answer-count").inner_text() == f"{ANSWER_MAX}/{ANSWER_MAX}")
+            await page.locator("#answer").fill("ข" * (ANSWER_MAX - 1) + "\U0001F600")
+            res.check("clamp never keeps half an emoji",
+                      await page.locator("#answer").input_value() == "ข" * (ANSWER_MAX - 1))
+            await page.locator("#business").fill("ร" * 80)
+            res.check("page clamps the business to 50 units without maxlength",
+                      len(await page.locator("#business").input_value()) == BUSINESS_MAX)
+            res.check("no console errors while clamping", not log["errors"], str(log["errors"]))
+            await ctx.close()
+
+            # 4c. safety net for a campaign with longer fixed lines (test-only config served for this page)
+            log = {}
+            ctx, page = await open_page(browser, base, "?c=LONGTEST", log, html=html_with_long_campaign())
+            business = "โรงงานผลิตชิ้นส่วนรถยนต์"
+            await page.locator("#business").fill(business)
+            await page.locator("#answer").fill("ข" * 40)
             budget = await page.locator("#budget").inner_text()
-            res.check("over-budget message shown", budget.startswith("ข้อความยาวเกินที่ LINE รับได้ · ลดอีก "), budget)
+            res.check("long config shows the remaining-room hint", budget.startswith("LINE รับได้อีกประมาณ "), budget)
+            await page.locator("#answer").fill("ข" * ANSWER_MAX)
+            budget = await page.locator("#budget").inner_text()
+            res.check("long config shows the over-limit message", budget.startswith("ข้อความยาวเกินที่ LINE รับได้ · ลดอีก "), budget)
             cut = int("".join(ch for ch in budget if ch.isdigit()) or 0)
-            fit = lambda n: len(LINE_BASE + encode_component(expected_text("โรงงานผลิตชิ้นส่วนรถยนต์", "ข" * (300 - n)))) <= URL_LIMIT
+            fit = lambda n: len(LINE_BASE + encode_component(
+                expected_text(business, "ข" * (ANSWER_MAX - n), "LONGTEST", LONG_REQUEST))) <= URL_LIMIT
             res.check("cut count is exact (fits after N, not after N-1)", fit(cut) and not fit(cut - 1), str(cut))
             await page.locator("button[type=submit]").click()
             await asyncio.sleep(0.3)
-            res.check("over-budget submit is blocked", not log["line"])
-            res.check("over-budget submit focuses answer", await page.evaluate("() => document.activeElement.id") == "answer")
-            await shot(page, shots, "05-over-budget-390")
-            await page.locator("#answer").fill("ข" * (300 - cut))
+            res.check("over-limit submit is blocked", not log["line"])
+            res.check("over-limit submit focuses answer", await page.evaluate("() => document.activeElement.id") == "answer")
+            await shot(page, shots, "05b-over-limit-config-390")
+            await page.locator("#answer").fill("ข" * (ANSWER_MAX - cut))
             await page.locator("button[type=submit]").click()
             await wait_for_line(log, 1)
-            res.check("longest allowed message opens LINE under 2,000", log["line"] and len(log["line"][0]) <= URL_LIMIT,
+            res.check("longest allowed long-config message opens LINE under 2,000",
+                      log["line"] and len(log["line"][0]) <= URL_LIMIT,
                       str(len(log["line"][0]) if log["line"] else None))
             await ctx.close()
 

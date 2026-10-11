@@ -463,9 +463,9 @@ body {
 
 .friend {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 2px 12px;
+  grid-template-columns: 1fr;               /* stacked: the CTA names the OA, so it needs its own row */
+  justify-items: start;
+  gap: 2px;
   margin-top: 20px;
   padding: 14px 16px;
   border-radius: 18px;
@@ -479,11 +479,11 @@ body {
 .friend:active { transform: translateY(1px); }
 .friend:focus { outline: none; }
 .friend:focus-visible { outline: 3px solid var(--gold-500); outline-offset: 3px; }
-.friend__q { grid-column: 1; font-size: 0.9375rem; line-height: 1.45; }
-.friend__why { grid-column: 1; font-size: var(--fs-micro); color: rgba(244, 239, 228, 0.66); }
+.friend__q { font-size: 0.9375rem; line-height: 1.45; }
+.friend__why { grid-row: 2; font-size: var(--fs-micro); color: rgba(244, 239, 228, 0.66); }
 .friend__cta {
-  grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 3;
+  margin-top: 10px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -529,11 +529,6 @@ body {
 @media (min-width: 420px) {
   :root { --gutter: 22px; }
   .card { padding: 28px 22px 22px; }
-}
-@media (max-width: 374px) {
-  .friend { grid-template-columns: 1fr; gap: 2px; }
-  .friend__why { grid-row: 2; }
-  .friend__cta { grid-column: 1; grid-row: 3; justify-self: start; margin-top: 10px; }
 }
 @media (max-width: 359px) {
   :root { --gutter: 14px; }

@@ -21,8 +21,11 @@ exactly these four lines.
   (case-insensitive). A missing or unknown id falls back to `default`. A future class needs only a new entry
   plus its own `?c=` link and QR.
 - **Length guard.** A Thai character takes 9 characters in the link, and the link must stay under 2,000
-  characters. Answers that fit inside the 160 and 300 character limits can still make the link too long, so the
-  page shows the remaining room. If the text is too long, it blocks sending and shows "ลดอีก N ตัวอักษร".
+  characters. The fields allow 50 (business) and 100 (answer) characters: with the IESA6 lines that is at most
+  1,950 characters even if every character is Thai, so the counters are exact and no extra hint shows. The page
+  enforces the limits in UTF-16 units, because Safari counts `maxlength` in grapheme clusters and would let Thai
+  vowel and tone marks through. If a future campaign has longer fixed lines, the page shows the remaining room
+  from 85% of the limit and blocks sending with "ลดอีก N ตัวอักษร". In that case, lower the `maxlength` values.
 - **Publish.** Publish as GitHub Pages repo `pgnoung/ai-agent-blueprint`. The slide QR points to
   `https://pgnoung.github.io/ai-agent-blueprint/?c=IESA6`.
 - **Files.** `index.html`, `style.css` and `app.js`, plus `fonts/` (Mitr 500 and Noto Sans Thai Looped 400,
