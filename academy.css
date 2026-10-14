@@ -1,0 +1,187 @@
+/* Academy theme — campaigns with "theme": "academy" (BAM8, 15 Oct 2026; พี่ง้วง: "theme เหมือนเว็บ pngoungacademy").
+   Tokens copied from pngoungacademy.com (live, read 15 Oct 2026): cream paper #fff9f1, ink #1e2a4a, cobalt #2f54d8,
+   gold #ffc53d, sky #cfe6ff → #eaf4ff, 2px ink outlines with a hard "pop" shadow, Mitr headings + Anuphan body.
+   Mascot art and the sky are the Academy's own assets (img/), Anuphan is OFL (fonts/anuphan-LICENSE.txt). */
+
+@font-face { font-family: "Anuphan"; font-weight: 400; font-display: swap; src: url(fonts/anuphan-thai-400-normal.woff2) format("woff2"); unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC; }
+@font-face { font-family: "Anuphan"; font-weight: 400; font-display: swap; src: url(fonts/anuphan-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Anuphan"; font-weight: 600; font-display: swap; src: url(fonts/anuphan-thai-600-normal.woff2) format("woff2"); unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC; }
+@font-face { font-family: "Anuphan"; font-weight: 600; font-display: swap; src: url(fonts/anuphan-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+.acad-only { display: none; }
+
+:root[data-theme="academy"] {
+  --ink: #1e2a4a;
+  --ink-soft: #3b4768;
+  --ink-faint: #56607f;
+  --paper: #fff9f1;
+  --cobalt: #2f54d8;
+  --gold: #ffc53d;
+  --gold-deep: #e29a12;
+  --pop: 0 4px 0 var(--ink);
+  --pop-hover: 0 7px 0 var(--ink);
+
+  --c-page: #eaf4ff;
+  --c-on-page: var(--ink);
+  --c-on-page-dim: var(--ink-soft);
+  --c-on-page-faint: var(--ink-faint);
+  --c-card: #fff;
+  --c-ink: var(--ink);
+  --c-ink-dim: var(--ink-soft);
+  --c-ink-faint: var(--ink-faint);
+  --c-field: #fff;
+  --c-field-line: rgba(30, 42, 74, 0.45);
+  --c-focus: var(--cobalt);
+  --font-body: "Anuphan", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "Mitr", "Anuphan", system-ui, sans-serif;
+  --r-card: 24px;
+  --r-field: 14px;
+}
+
+:root[data-theme="academy"] body {
+  color: var(--ink);
+  background-color: #eaf4ff;
+  /* the sky photo is 125vw tall (880x1100): fade it out before its bottom edge, then cream paper */
+  background-image:
+    linear-gradient(180deg, rgba(234, 244, 255, 0) 0, rgba(234, 244, 255, 0) 55vw, rgba(234, 244, 255, 0.92) 112vw, #eaf4ff 125vw, #fff9f1 190vw),
+    url(img/sky-hero-mobile.webp);
+  background-size: 100% 100%, 100% auto;
+  background-repeat: no-repeat, no-repeat;
+  background-position: top center, top center;
+}
+:root[data-theme="academy"] .acad-only { display: block; }
+
+/* top bar = the Academy header */
+:root[data-theme="academy"] .acad-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -6px -4px 18px;
+  padding: 10px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--pop);
+}
+.acad-bar__face { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; }
+.acad-bar__name { margin: 0; font: 600 1.15rem / 1.1 "Mitr", "Anuphan", sans-serif; color: var(--ink); }
+.acad-bar__sub { margin: 2px 0 0; font: 400 0.82rem / 1.2 "Anuphan", sans-serif; color: var(--ink-soft); }
+
+/* hero: mascot + speech bubble beside the title */
+:root[data-theme="academy"] .hero { position: relative; padding: 4px 4px 20px; }
+:root[data-theme="academy"] .acad-hero {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  margin: 0 0 8px;
+}
+.acad-hero__bubble {
+  position: relative;
+  flex: 1;
+  margin: 0 0 40px;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--pop);
+  font: 600 0.95rem / 1.45 "Anuphan", sans-serif;
+  color: var(--ink);
+}
+.acad-hero__bubble::after {
+  content: "";
+  position: absolute;
+  right: -11px;
+  bottom: 18px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-right: 2px solid var(--ink);
+  border-top: 2px solid var(--ink);
+  transform: rotate(45deg);
+}
+.acad-hero__mascot { flex: none; width: 96px; height: auto; filter: drop-shadow(0 6px 10px rgba(30, 42, 74, 0.18)); }
+@media (prefers-reduced-motion: no-preference) {
+  .acad-hero__mascot { animation: acad-wave 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes acad-wave { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-2.5deg) translateY(-3px); } }
+}
+
+:root[data-theme="academy"] .kicker {
+  display: inline-flex;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  font: 600 0.82rem / 1.3 "Anuphan", sans-serif;
+  letter-spacing: 0.01em;
+  color: var(--cobalt);
+}
+:root[data-theme="academy"] .kicker::before { content: "✦"; width: auto; height: auto; background: none; color: var(--gold-deep); opacity: 1; }
+:root[data-theme="academy"] .title { font-weight: 600; color: var(--ink); }
+:root[data-theme="academy"] .title__accent {
+  -webkit-text-fill-color: var(--cobalt);
+  color: var(--cobalt);
+  background: linear-gradient(transparent 62%, rgba(255, 197, 61, 0.55) 62%, rgba(255, 197, 61, 0.55) 92%, transparent 92%);
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  align-self: flex-start;
+  padding: 0 4px;
+}
+:root[data-theme="academy"] .promise { color: var(--ink-soft); }
+:root[data-theme="academy"] .steps { color: var(--ink-faint); }
+:root[data-theme="academy"] .steps__item.is-done { color: var(--ink-soft); }
+:root[data-theme="academy"] .steps__item.is-done .steps__dot { background: var(--ink); border-color: var(--ink); }
+:root[data-theme="academy"] .steps__item.is-current { color: var(--cobalt); font-weight: 600; }
+:root[data-theme="academy"] .steps__item.is-current .steps__dot { background: var(--gold); border-color: var(--ink); box-shadow: 0 0 0 4px rgba(255, 197, 61, 0.35); }
+:root[data-theme="academy"] .page.is-sent .steps__item.is-current { color: var(--ink-soft); font-weight: 400; }
+:root[data-theme="academy"] .page.is-sent .steps__item.is-current .steps__dot { background: var(--ink); border-color: var(--ink); box-shadow: none; }
+:root[data-theme="academy"] .page.is-sent .steps__item:last-child { color: var(--cobalt); font-weight: 600; }
+:root[data-theme="academy"] .page.is-sent .steps__item:last-child .steps__dot { background: var(--gold); border-color: var(--ink); box-shadow: 0 0 0 4px rgba(255, 197, 61, 0.35); }
+:root[data-theme="academy"] .steps__item + .steps__item::before { background: rgba(30, 42, 74, 0.3); }
+
+/* cards: white, ink outline, pop shadow */
+:root[data-theme="academy"] .card {
+  background: #fff;
+  border: 2px solid var(--ink);
+  box-shadow: 0 6px 0 var(--ink), 0 18px 40px -18px rgba(30, 42, 74, 0.35);
+  color: var(--ink);
+}
+:root[data-theme="academy"] .field__num { background: var(--gold); color: var(--ink); border: 2px solid var(--ink); }
+:root[data-theme="academy"] .field__input { border: 2px solid var(--c-field-line); }
+:root[data-theme="academy"] .field__input:focus { border-color: var(--cobalt); box-shadow: 0 0 0 4px rgba(47, 84, 216, 0.16); }
+
+/* primary button = the Academy gold pill */
+:root[data-theme="academy"] .btn--primary {
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: var(--gold);
+  color: var(--ink);
+  font-family: "Anuphan", sans-serif;
+  font-weight: 600;
+  box-shadow: var(--pop);
+  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 160ms ease;
+}
+:root[data-theme="academy"] .btn--primary:hover { transform: translateY(-2px); box-shadow: var(--pop-hover); }
+:root[data-theme="academy"] .btn--primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+:root[data-theme="academy"] .btn--secondary {
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--pop);
+}
+:root[data-theme="academy"] .btn-link { color: var(--cobalt); }
+
+/* done view: cheering mascot */
+.acad-cheer { width: 120px; height: auto; margin: -8px auto 4px; }
+:root[data-theme="academy"] .acad-cheer { display: block; }
+:root[data-theme="academy"] .done__mark { display: none; }
+:root[data-theme="academy"] .bubble { border: 2px solid var(--ink); background: #eaf4ff; }
+:root[data-theme="academy"] .friend { border: 2px solid var(--ink); border-radius: 18px; background: #fff9f1; box-shadow: var(--pop); }
+:root[data-theme="academy"] .foot { color: var(--ink-faint); }
+:root[data-theme="academy"] .foot__brand { color: var(--ink); }
+:root[data-theme="academy"] .friend { color: var(--ink); }
+:root[data-theme="academy"] .friend__q { font-weight: 600; }
+:root[data-theme="academy"] .friend__why { color: var(--ink-faint); }
+:root[data-theme="academy"] .friend__cta { background: #06c755; color: #fff; border: 2px solid var(--ink); box-shadow: 0 3px 0 var(--ink); font-family: "Anuphan", sans-serif; font-weight: 600; }
+:root[data-theme="academy"] .friend:focus-visible { outline-color: var(--cobalt); }
+:root[data-theme="academy"] .done__send { color: var(--cobalt); }
+:root[data-theme="academy"] .done__title { color: var(--ink); }

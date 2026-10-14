@@ -14,6 +14,7 @@
   <link rel="preload" href="fonts/NotoSansThaiLooped-400-thai.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/Mitr-500-thai.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="academy.css">
   <!-- Campaign config (data, not code). Pick one with ?c=<campaignId>; unknown or missing ids use "default".
        The message format must match what ลูกแพร parses: "<keyword> <campaignId>" / "ธุรกิจ: …" /
        "อยากให้ผู้ช่วย AI ทำก่อน: …" / requestLine. -->
@@ -33,16 +34,26 @@
         "keyword": "#BAM8",
         "oa": "@pngoung",
         "kicker": "Business Autopilot Masterclass รุ่น 8 · พี่ง้วง",
-        "requestLine": "(ขอรับไอเดียการวางระบบ AI Agent)"
+        "requestLine": "(ขอรับไอเดียการวางระบบ AI Agent)",
+        "theme": "academy"
       }
     }
   }
   </script>
+  <script src="theme.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
   <main class="page">
+    <div class="acad-bar acad-only">
+      <img class="acad-bar__face" src="img/face-160.webp" width="44" height="44" alt="">
+      <div><p class="acad-bar__name">Pngoung Academy</p><p class="acad-bar__sub">เรียน AI กับพี่ง้วง</p></div>
+    </div>
     <header class="hero">
+      <div class="acad-hero acad-only">
+        <p class="acad-hero__bubble"><span class="ph">สวัสดีครับ!</span> <span class="ph">พิมพ์ 2 ช่อง</span> <span class="ph">แล้วกดส่งเข้า LINE ได้เลย</span></p>
+        <img class="acad-hero__mascot" src="img/welcome-320.webp" width="96" height="183" alt="พี่ง้วงโบกมือทักทาย">
+      </div>
       <p class="kicker" data-bind="kicker">IESA S-Curve MBA รุ่น 6 · โค้ชง้วง</p>
       <h1 class="title"><span class="title__accent">AI Agent</span><span class="title__rest">ตัวแรกของคุณ</span></h1>
       <p class="promise"><span class="ph">เราจะส่งไอเดียการวางระบบ AI Agent</span> <span class="ph">สำหรับธุรกิจคุณทาง LINE</span></p>
@@ -95,6 +106,7 @@
     </section>
 
     <section class="card card--done" id="done-view" aria-labelledby="done-title" hidden>
+      <img class="acad-cheer acad-only" src="img/cheer-320.webp" width="120" height="242" alt="">
       <div class="done__mark" aria-hidden="true">
         <svg viewBox="0 0 48 48" focusable="false"><path d="m14 24.5 7 7 13-14" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
