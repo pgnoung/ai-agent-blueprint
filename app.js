@@ -54,9 +54,15 @@
     return text.slice(0, last >= 0xD800 && last <= 0xDBFF ? max - 1 : max);
   }
 
+  // A campaign whose keyword already is its id (#BAM8) sends just the keyword: "#BAM8", not "#BAM8 BAM8".
+  function firstLine(campaign) {
+    const bare = campaign.keyword.replace(/^#/, '').toUpperCase();
+    return bare === campaign.campaignId.toUpperCase() ? campaign.keyword : `${campaign.keyword} ${campaign.campaignId}`;
+  }
+
   function buildText(campaign, business, answer) {
     return [
-      `${campaign.keyword} ${campaign.campaignId}`,
+      firstLine(campaign),
       `ธุรกิจ: ${business}`,
       `อยากให้ผู้ช่วย AI ทำก่อน: ${answer}`,
       campaign.requestLine,
